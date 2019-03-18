@@ -1,12 +1,12 @@
-package parsing_features;
+package command_features;
 
 import java.util.Objects;
 
-public class ModelCommand {
+public class CommandModel {
     private String nameCommand;
     private String argCommand;
 
-    public ModelCommand(String nameCommand, String argCommand) {
+    public CommandModel(String nameCommand, String argCommand) {
         this.nameCommand = nameCommand;
         this.argCommand = argCommand;
     }
@@ -31,7 +31,7 @@ public class ModelCommand {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ModelCommand that = (ModelCommand) o;
+        CommandModel that = (CommandModel) o;
         return Objects.equals(nameCommand, that.nameCommand) &&
                 Objects.equals(argCommand, that.argCommand);
     }
@@ -43,7 +43,7 @@ public class ModelCommand {
 
     @Override
     public String toString() {
-        return "ModelCommand{" +
+        return "CommandModel{" +
                 "nameCommand='" + nameCommand + '\'' +
                 ", argCommand='" + argCommand + '\'' +
                 '}';
