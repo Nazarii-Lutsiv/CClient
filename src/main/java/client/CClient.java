@@ -4,6 +4,7 @@ package client;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.io.DataOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -14,7 +15,7 @@ public class CClient extends javax.swing.JFrame {
     private String host = DEFAULT_HOST;
     private int port = DEFAULT_PORT;
     private Date date;
-    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd MMM hh:mm:ss:  ");
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss:  ");
     private ConnectionHendler connectionHendler;
     private ProtocolManager protocolManager;
     private Thread showResponseThread;
@@ -36,6 +37,7 @@ public class CClient extends javax.swing.JFrame {
                     connectionHendler.listenSocket();
                     if (connectionHendler.getSocket().isConnected()) {
                         connectionHendler.readMessage();
+                        connectionHendler.sendRequestInfo();
                         showResponse();
                         jTextArea1.append(simpleDateFormat.format(new Date()) + "Connected to server!\n");
                     } else {
@@ -79,7 +81,7 @@ public class CClient extends javax.swing.JFrame {
     private void  showResponse() {
         showResponseThread = new Thread(() -> {
             while (connectionHendler.getSocket().isConnected()) {
-                if (connectionHendler.getResponseText() != null) {
+                if (connectionHendler.getResponseText() != null && !connectionHendler.getResponseText().equals("")) {
                     jTextArea1.append(simpleDateFormat.format(new Date()) + connectionHendler.getResponseText() + "\n");
                     connectionHendler.setResponseText(null);
                 }

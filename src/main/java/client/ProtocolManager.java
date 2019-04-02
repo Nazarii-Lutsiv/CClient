@@ -1,6 +1,7 @@
 package client;
 
 import command_features.Command;
+import lombok.Data;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -11,6 +12,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Data
 public class ProtocolManager {
     private static final Charset CHARSET = Charset.forName("UTF-8");
     // Commands
@@ -46,6 +48,13 @@ public class ProtocolManager {
     private boolean isWaitingMsg = false;
     private boolean isWaitingFile = false;
 
+    private boolean isLogin = false;
+
+    private Thread requestListLogin;
+    private Thread requestMsg;
+    private Thread requestFile;
+
+
     public byte[] execute(String textFromLable) {
 
         return parserCommand(textParser(textFromLable));
@@ -64,23 +73,24 @@ public class ProtocolManager {
                         return serialize(CMD_ECHO, new String(parserCommandToGetSinglePostArgument(textFromLable)));
 //                        return rebuildArray(CMD_ECHO, parserCommandToGetSinglePostArgument(textFromLable).getBytes());
                     case CMD_LOGIN:
-                        String[] item = parserCommandToGetPluralPostArgument(textFromLable);
+                        String[] itemForLogin = parserCommandToGetPluralPostArgument(textFromLable);
                         user = new User();
-                        user.setLogin(item[1]);
-                        return serialize(CMD_LOGIN, new String[]{item[1], item[2]});
-                    case CMD_LIST:
-                        isWaitingList = true;
-                        return new byte[]{CMD_LIST};
+                        user.setLogin(itemForLogin[1]);
+                        return serialize(CMD_LOGIN, new String[]{itemForLogin[1], itemForLogin[2]});
+//                    case CMD_LIST:
+//                        isWaitingList = true;
+//                        return new byte[]{CMD_LIST};
                     case CMD_MSG:
-                        return serialize(CMD_MSG, new String[]{user.getLogin(), parserCommandToGetSinglePostArgument(textFromLable)});
+                        String[] itemForMsg =  parserCommandToGetPluralPostArgument(textFromLable);
+                        return serialize(CMD_MSG, new String[]{itemForMsg[1], itemForMsg[2]});
                     case CMD_FILE:
                         return sendFile(textFromLable);
-                    case CMD_RECIVE_MSG:
-                        isWaitingMsg = true;
-                        return new byte[]{CMD_RECEIVE_MSG};
-                    case CMD_RECIVE_FILE:
-                        isWaitingFile = true;
-                        return new byte[]{CMD_RECEIVE_FILE};
+//                    case CMD_RECIVE_MSG:
+//                        isWaitingMsg = true;
+//                        return new byte[]{CMD_RECEIVE_MSG};
+//                    case CMD_RECIVE_FILE:
+//                        isWaitingFile = true;
+//                        return new byte[]{CMD_RECEIVE_FILE};
                 }
             }
         }
@@ -99,17 +109,20 @@ public class ProtocolManager {
             case CMD_LOGIN_OK_NEW:
                 return "New user registration OK.";
             case CMD_LOGIN_OK:
+                isLogin = true;
                 return "Login OK.";
             case CMD_MSG_SENT:
                 return "Message sent.";
             case CMD_FILE_SENT:
                 return "File sent.";
             case CMD_RECEIVE_MSG_EMPTY:
-                return "List of msg is empty.";
+//                return "List of msg is empty.";
+                return "";
             case SERVER_ERROR:
                 return "Server ERROR!";
             case CMD_RECEIVE_FILE_EMPTY:
-                return "Receive file empty!";
+//                return "Receive file empty!";
+                return "";
             case WRONG_PARAMS:
                 return "Wrong params!";
             case LOGIN_WRONG_PASSWORD:
@@ -125,19 +138,20 @@ public class ProtocolManager {
     private String parserMessageFromServer(byte[] message) {
 
         System.out.println(Byte.toUnsignedInt(message[0]));
-        if(isWaitingEcho){
+        if (isWaitingEcho) {
             isWaitingEcho = false;
             return new String(message);
+
         } else if (isWaitingList || isWaitingMsg) {
             isWaitingList = false;
             isWaitingMsg = false;
             StringBuffer stringBuffer = new StringBuffer();
             String[] listName = null;
             listName = deserialize(message, 0, String[].class);
-            for (String s : listName) {
-                stringBuffer.append(s);
-            }
+
+            stringBuffer.append(listName[0] + "- " + listName[1]);
             return stringBuffer.toString();
+
         } else if (isWaitingFile) {
             isWaitingFile = false;
             Object[] objectFile = null;
@@ -182,7 +196,22 @@ public class ProtocolManager {
         return null;
     }
 
-    private byte[] sendFile(String command){
+    public byte[] requestListUsers() {
+        isWaitingList = true;
+        return new byte[]{CMD_LIST};
+    }
+
+    public byte[] requestMsg() {
+        isWaitingMsg = true;
+        return new byte[]{CMD_RECEIVE_MSG};
+    }
+
+    public byte[] requestFile() {
+        isWaitingFile = true;
+        return new byte[]{CMD_RECEIVE_FILE};
+    }
+
+    private byte[] sendFile(String command) {
         String[] item = parserCommandToGetPluralPostArgument(command);
         Path pathToFiles = Paths.get(pathFile, item[1]);
         byte[] byteFile = null;
@@ -192,7 +221,7 @@ public class ProtocolManager {
             e.printStackTrace();
             byteFile = null;
         }
-        return serialize(CMD_FILE, new  Object[]{user.getLogin(), item[1], byteFile});
+        return serialize(CMD_FILE, new Object[]{user.getLogin(), item[1], byteFile});
     }
 
     private String parserCommandToGetSinglePostArgument(String command) {
@@ -236,7 +265,7 @@ public class ProtocolManager {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T deserialize(byte[] data, int offset, Class<T> clazz){
+    private <T> T deserialize(byte[] data, int offset, Class<T> clazz) {
         try {
             try (ByteArrayInputStream stream = new ByteArrayInputStream(data, offset, data.length - offset);
                  ObjectInputStream objectStream = new ObjectInputStream(stream)) {
