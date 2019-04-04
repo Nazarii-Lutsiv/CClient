@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 @Data
 public class ConnectionHendler implements Closeable {
-    private Logger log = Logger.getLogger(this.getClass().getName());
     private String host;
     private int port;
     private Socket socket;
@@ -27,12 +26,10 @@ public class ConnectionHendler implements Closeable {
     private Thread threadShowResponse;
     private Thread threadSendMessage;
     private TimerTask timerTaskRequestInfo;
-    //    private TimerTask timerTaskReadMessage;
     private Timer timerRequestInfo;
 
     private volatile boolean isClose = false;
     private volatile String responseText;
-
 
     public ConnectionHendler(String host, int port) {
         this.host = host;
@@ -50,6 +47,7 @@ public class ConnectionHendler implements Closeable {
             dataInputStream = new DataInputStream(socket.getInputStream());
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             protocolManager = new ProtocolManager();
+
             if (socket.isConnected()) {
                 System.out.println("Socket is created and connected!");
                 this.isClose = false;
@@ -84,17 +82,17 @@ public class ConnectionHendler implements Closeable {
 
     public synchronized void sendMessage(String textInput) {
         byte[] command = protocolManager.execute(textInput);
-        threadSendMessage = new Thread(() -> {
-            try {
-                dataOutputStream.writeInt(command.length);
-                dataOutputStream.write(command);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        threadSendMessage.setName("ThreadSendMessage");
-        threadSendMessage.start();
-        threadSendMessage.interrupt();
+            threadSendMessage = new Thread(() -> {
+                try {
+                    dataOutputStream.writeInt(command.length);
+                    dataOutputStream.write(command);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            threadSendMessage.setName("ThreadSendMessage");
+            threadSendMessage.start();
+            threadSendMessage.interrupt();
     }
 
     public synchronized void sendRequestInfo() {
@@ -104,14 +102,13 @@ public class ConnectionHendler implements Closeable {
                 if (protocolManager.isLogin() && socket.isConnected()) {
                     try {
                         if (!threadSendMessage.isAlive()) {
-//                            dataOutputStream.writeInt(protocolManager.requestListUsers().length);
-//                            dataOutputStream.write(protocolManager.requestListUsers());
-//                            Thread.sleep(100);
                             dataOutputStream.writeInt(protocolManager.requestMsg().length);
                             dataOutputStream.write(protocolManager.requestMsg());
                             Thread.sleep(200);
+
                             dataOutputStream.writeInt(protocolManager.requestFile().length);
                             dataOutputStream.write(protocolManager.requestFile());
+                            Thread.sleep(200);
                         } else threadSendMessage.join();
                     } catch (IOException | InterruptedException e) {
                         e.printStackTrace();
@@ -122,42 +119,6 @@ public class ConnectionHendler implements Closeable {
         };
         timerRequestInfo = new Timer("TimerTaskRequestInfo");
         timerRequestInfo.scheduleAtFixedRate(timerTaskRequestInfo, 500, 500);
-
-//            threadRequestInfo = new Thread(() -> {
-//                while (socket.isConnected()) {
-////                synchronized (DataOutputStream.class) {
-//                    if (protocolManager.isLogin()) {
-//                        try {
-//                            dataOutputStream.writeInt(protocolManager.requestListUsers().length);
-//                            dataOutputStream.write(protocolManager.requestListUsers());
-//
-//                            dataOutputStream.writeInt(protocolManager.requestMsg().length);
-//                            dataOutputStream.write(protocolManager.requestMsg());
-//
-//                            dataOutputStream.writeInt(protocolManager.requestFile().length);
-//                            dataOutputStream.write(protocolManager.requestFile());
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                            threadRequestInfo.interrupt();
-//                            close(true);
-//                        }
-//                    }
-//                    try {
-//                        Thread.sleep(500);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            });
-
-//            Thread.yield();
-
-//            }
-
-//        threadRequestInfo.setPriority(Thread.NORM_PRIORITY);
-//        threadRequestInfo.setDaemon(true);
-//        threadRequestInfo.start();
-//        threadRequestInfo.setName("ThreadRequestInfo");
     }
 
     public synchronized String readMessage() {
@@ -182,27 +143,8 @@ public class ConnectionHendler implements Closeable {
         });
         threadReadMessage.setDaemon(true);
         threadReadMessage.start();
-        threadReadMessage.setName("TheadreadMessage");
+        threadReadMessage.setName("TheadReadMessage");
+
         return responseText;
-//        timerTaskReadMessage = new TimerTask() {
-//            @Override
-//            public void run() {
-//                if (socket.isConnected()) {
-//                    try {
-//                        int contentSize = dataInputStream.readInt();
-//                        byte[] message = new byte[contentSize];
-//                        dataInputStream.readFully(message);
-//                        responseText = new String(protocolManager.responseHendler(message));
-//                    } catch (IOException e) {
-//                        cancel();
-//                        close(true);
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        };
-//        Timer timer = new Timer("TimerTaskReadMessage");
-//        timer.scheduleAtFixedRate(timerTaskReadMessage, 200, 200);
-//        return responseText;
     }
 }

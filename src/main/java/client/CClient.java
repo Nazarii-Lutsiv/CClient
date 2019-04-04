@@ -17,12 +17,12 @@ public class CClient extends javax.swing.JFrame {
     private Date date;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss:  ");
     private ConnectionHendler connectionHendler;
-    private ProtocolManager protocolManager;
     private Thread showResponseThread;
 
     public CClient() {
         super("CClient");
         initComponents();
+        setResizable(false);
 
         connectionHendler = new ConnectionHendler(DEFAULT_HOST, DEFAULT_PORT);
 
@@ -106,6 +106,8 @@ public class CClient extends javax.swing.JFrame {
         jTextField2 = new javax.swing.JTextField();
         jButton3 = new javax.swing.JButton();
 
+        jTextArea1.setEditable(false);
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jTextField1.setText("localhost");
@@ -124,7 +126,7 @@ public class CClient extends javax.swing.JFrame {
         jTextArea1.setRows(5);
         jScrollPane1.setViewportView(jTextArea1);
 
-        jTextField2.setText("#login: l-kow p-rie;");
+        jTextField2.setText("#login: l-nazar p-rie123;");
 
         jButton3.setText("Send");
 
@@ -205,6 +207,7 @@ public class CClient extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new CClient().setVisible(true);
+
             }
         });
     }

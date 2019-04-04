@@ -41,8 +41,6 @@ public class ProtocolManager {
 
     private boolean isCommand = false;
 
-    private User user;
-    private String pathFile = "C:\\Users\\sbala\\Desktop\\TestCClient";
     private boolean isWaitingEcho = false;
     private boolean isWaitingList = false;
     private boolean isWaitingMsg = false;
@@ -50,13 +48,9 @@ public class ProtocolManager {
 
     private boolean isLogin = false;
 
-    private Thread requestListLogin;
-    private Thread requestMsg;
-    private Thread requestFile;
-
+    private String pathToDirectForDownloadFile = "F:\\TestCClient\\";
 
     public byte[] execute(String textFromLable) {
-
         return parserCommand(textParser(textFromLable));
     }
 
@@ -71,31 +65,20 @@ public class ProtocolManager {
                     case CMD_ECHO:
                         isWaitingEcho = true;
                         return serialize(CMD_ECHO, new String(parserCommandToGetSinglePostArgument(textFromLable)));
-//                        return rebuildArray(CMD_ECHO, parserCommandToGetSinglePostArgument(textFromLable).getBytes());
                     case CMD_LOGIN:
                         String[] itemForLogin = parserCommandToGetPluralPostArgument(textFromLable);
-                        user = new User();
-                        user.setLogin(itemForLogin[1]);
                         return serialize(CMD_LOGIN, new String[]{itemForLogin[1], itemForLogin[2]});
-//                    case CMD_LIST:
-//                        isWaitingList = true;
-//                        return new byte[]{CMD_LIST};
+                    case CMD_LIST:
+                        return requestList();
                     case CMD_MSG:
-                        String[] itemForMsg =  parserCommandToGetPluralPostArgument(textFromLable);
+                        String[] itemForMsg = parserCommandToGetPluralPostArgument(textFromLable);
                         return serialize(CMD_MSG, new String[]{itemForMsg[1], itemForMsg[2]});
                     case CMD_FILE:
                         return sendFile(textFromLable);
-//                    case CMD_RECIVE_MSG:
-//                        isWaitingMsg = true;
-//                        return new byte[]{CMD_RECEIVE_MSG};
-//                    case CMD_RECIVE_FILE:
-//                        isWaitingFile = true;
-//                        return new byte[]{CMD_RECEIVE_FILE};
                 }
             }
         }
-
-        return null;
+        return new byte[]{0};
     }
 
     public String responseHendler(byte[] message) {
@@ -116,12 +99,10 @@ public class ProtocolManager {
             case CMD_FILE_SENT:
                 return "File sent.";
             case CMD_RECEIVE_MSG_EMPTY:
-//                return "List of msg is empty.";
                 return "";
             case SERVER_ERROR:
                 return "Server ERROR!";
             case CMD_RECEIVE_FILE_EMPTY:
-//                return "Receive file empty!";
                 return "";
             case WRONG_PARAMS:
                 return "Wrong params!";
@@ -142,29 +123,45 @@ public class ProtocolManager {
             isWaitingEcho = false;
             return new String(message);
 
+        } else if (isWaitingFile) {
+            isWaitingFile = false;
+            Object[] objectFile = null;
+            objectFile = deserialize(message, 0, Object[].class);
+            Path path = Paths.get(pathToDirectForDownloadFile + objectFile[1]);
+            byte[] byteFile = (byte[]) objectFile[2];
+            File file = new File(path.toString());
+
+            try {
+                if (file.createNewFile()) {
+                    Files.write(path, byteFile, StandardOpenOption.APPEND);
+                    return "File - " + objectFile[1].toString() + " success comes.";
+                } else if (file.exists()) {
+                    file.delete();
+                    file.createNewFile();
+                    Files.write(path, byteFile, StandardOpenOption.APPEND);
+                    return "File - " + objectFile[1].toString() + " is existed and rewrite.";
+                } else return "File - " + objectFile[1].toString() + " can`t create.";
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+
         } else if (isWaitingList || isWaitingMsg) {
             isWaitingList = false;
             isWaitingMsg = false;
             StringBuffer stringBuffer = new StringBuffer();
             String[] listName = null;
             listName = deserialize(message, 0, String[].class);
-
-            stringBuffer.append(listName[0] + "- " + listName[1]);
+            if (listName.length == 2) {
+                stringBuffer.append(listName[0] + "- " + listName[1]);
+            } else {
+                for (String s : listName) {
+                    stringBuffer.append(s);
+                }
+            }
             return stringBuffer.toString();
 
-        } else if (isWaitingFile) {
-            isWaitingFile = false;
-            Object[] objectFile = null;
-            objectFile = deserialize(message, 0, Object[].class);
-            Path path = Paths.get("C:\\Users\\sbala\\Desktop\\TestCClientResp\\" + objectFile[1]);
-            byte[] byteFile = (byte[]) objectFile[2];
-            try {
-                Files.write(path, byteFile, StandardOpenOption.APPEND);
-                return "File - " + objectFile[1].toString() + " is comming.";
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
         } else return null;
     }
 
@@ -196,38 +193,53 @@ public class ProtocolManager {
         return null;
     }
 
-    public byte[] requestListUsers() {
+    private byte[] requestList() {
         isWaitingList = true;
+        isWaitingFile = false;
+        isWaitingMsg = false;
         return new byte[]{CMD_LIST};
     }
 
     public byte[] requestMsg() {
         isWaitingMsg = true;
+        isWaitingFile = false;
+        isWaitingList = false;
         return new byte[]{CMD_RECEIVE_MSG};
     }
 
     public byte[] requestFile() {
         isWaitingFile = true;
+        isWaitingMsg = false;
+        isWaitingList = false;
         return new byte[]{CMD_RECEIVE_FILE};
     }
 
     private byte[] sendFile(String command) {
         String[] item = parserCommandToGetPluralPostArgument(command);
-        Path pathToFiles = Paths.get(pathFile, item[1]);
-        byte[] byteFile = null;
+        Path pathToFiles = Paths.get(item[2]);
+        File fileToSend = new File(pathToFiles.toString());
+        System.out.println(pathToFiles.getFileName());
+        byte[] fileToByteArray = readFileToByteArray(fileToSend);
+        return serialize(CMD_FILE, new Object[]{item[1], pathToFiles.getFileName().toString(), fileToByteArray});
+    }
+
+    private static byte[] readFileToByteArray(File file) {
+        FileInputStream fis = null;
+        byte[] bArray = new byte[(int) file.length()];
         try {
-            byteFile = Files.readAllBytes(pathToFiles);
-        } catch (IOException e) {
-            e.printStackTrace();
-            byteFile = null;
+            fis = new FileInputStream(file);
+            fis.read(bArray);
+            fis.close();
+
+        } catch (IOException ioExp) {
+            ioExp.printStackTrace();
         }
-        return serialize(CMD_FILE, new Object[]{user.getLogin(), item[1], byteFile});
+        return bArray;
     }
 
     private String parserCommandToGetSinglePostArgument(String command) {
         if (isCommand) {
             String arg = command.substring(command.indexOf(":") + 1, command.indexOf(";"));
-//            System.out.println(arg);
             return arg;
         } else return command;
     }
@@ -235,9 +247,6 @@ public class ProtocolManager {
     private String[] parserCommandToGetPluralPostArgument(String command) {
         String arguments = parserCommandToGetSinglePostArgument(command);
         String[] strings = arguments.split("(\\w)-");
-//        for (int i = 0; i < strings.length; i++) {
-//            System.out.println(strings[i]);
-//        }
         return strings;
     }
 
