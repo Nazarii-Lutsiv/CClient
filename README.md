@@ -1,12 +1,17 @@
 #CClient
+
 CClient is a chat client with simple UI, that can send and receive messages of a certain type (texts or files) from the server.
+
 ##Running the program
+
 * Download repository CClient from GitHub.
 
 * Open this application in any IDE with Java language support.
 
 * Run the main method that is in the CClient.java class.
+
 ##Usage
+
 * To connect and disconnect from the server set up the appropriate text boxes and buttons in UI.
 
 * To send messages, need to use the declared commands in the message sending field. The appropriate commands are listed below in the table.
