@@ -48,7 +48,7 @@ public class ProtocolManager {
 
     private boolean isLogin = false;
 
-    private String pathToDirectForDownloadFile = "F:\\TestCClient\\";
+    public static String pathToDirectForDownloadFile = "F:\\TestCClient\\";
 
     public byte[] execute(String textFromLable) {
         return parserCommand(textParser(textFromLable));
