@@ -24,5 +24,5 @@ Ping|#ping: <br> #p|#p|
 Echo|#e: ; <br> #echo: ; <br> #e: (some text); <br> #echo: (some text);|#e: hello;|
 Login|#login: login-nazar password-rie123; <br> #login: l-nazar p-rie123;| #login: l-nazar p-rie123;|
 Login List|#list|#list|
-Send Msg|#msg: login-(login user) text-(some text) <br> #msg: l-(login user) t-(some text)|#msg: l-nazar t-hello;|
+Send Msg|#msg: login-(login user) text-(some text); <br> #msg: l-(login user) t-(some text);|#msg: l-nazar t-hello;|
 Send File|#file: login-(login user) file-(URL dir with name file); <br> #f: l-(login user) f-(URL dir with name file);| #f: l-nazar f-F:\TestCClient\test1.txt;|
