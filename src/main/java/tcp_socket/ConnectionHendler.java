@@ -1,4 +1,4 @@
-package client;
+package tcp_socket;
 
 import lombok.Data;
 
@@ -12,7 +12,6 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Logger;
 
 @Data
 public class ConnectionHendler implements Closeable {

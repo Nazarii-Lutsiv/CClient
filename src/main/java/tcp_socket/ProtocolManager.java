@@ -1,7 +1,8 @@
-package client;
+package tcp_socket;
 
 import command_features.Command;
 import lombok.Data;
+import lpi.server.rmi.IServer;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -165,7 +166,7 @@ public class ProtocolManager {
         } else return null;
     }
 
-    private String textParser(String textFromLable) {
+    public String textParser(String textFromLable) {
         StringBuffer stringBuffer = new StringBuffer("");
         String text = null;
 
@@ -237,14 +238,14 @@ public class ProtocolManager {
         return bArray;
     }
 
-    private String parserCommandToGetSinglePostArgument(String command) {
+    public String parserCommandToGetSinglePostArgument(String command) {
         if (isCommand) {
             String arg = command.substring(command.indexOf(":") + 1, command.indexOf(";"));
             return arg;
         } else return command;
     }
 
-    private String[] parserCommandToGetPluralPostArgument(String command) {
+    public String[] parserCommandToGetPluralPostArgument(String command) {
         String arguments = parserCommandToGetSinglePostArgument(command);
         String[] strings = arguments.split("(\\w)-");
         return strings;
