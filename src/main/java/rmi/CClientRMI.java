@@ -17,7 +17,7 @@ public class CClientRMI extends javax.swing.JFrame {
     private int port = DEFAULT_PORT;
     private Date date;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss:  ");
-//    private ConnectionHendler connectionHendler;
+    //    private ConnectionHendler connectionHendler;
     private Thread showResponseThread;
 
     private RemoteHendlerRMI remoteHendlerRMI;
@@ -38,19 +38,17 @@ public class CClientRMI extends javax.swing.JFrame {
 
                 if (remoteHendlerRMI.getRegistry() == null) {
                     remoteHendlerRMI.registClient();
-                    if (remoteHendlerRMI.getRegistry() != null ){
+                    if (remoteHendlerRMI.getRegistry() != null) {
 //                        connectionHendler.readMessage();
 //                        connectionHendler.sendRequestInfo();
+                        remoteHendlerRMI.resiveInfoChecker();
                         showResponse();
                         jTextArea1.append(simpleDateFormat.format(new Date()) + "Connected to server!\n");
                     }
+//                    remoteHendlerRMI.close();
                 } else {
                     jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t connect to server!\n");
-                    try {
-                        remoteHendlerRMI.close();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
+                    remoteHendlerRMI.close();
                     return;
                 }
             }
@@ -61,12 +59,7 @@ public class CClientRMI extends javax.swing.JFrame {
             public void actionPerformed(ActionEvent e) {
 
                 if (remoteHendlerRMI.getRegistry() != null) {
-                    try {
-                        remoteHendlerRMI.close();
-                    } catch (IOException e1) {
-//                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t disconnect, try again!\n");
-                        e1.printStackTrace();
-                    }
+                    remoteHendlerRMI.close();
 //                    showResponseThread.interrupt();
                     if (remoteHendlerRMI.getRegistry() == null) {
                         jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
@@ -94,8 +87,10 @@ public class CClientRMI extends javax.swing.JFrame {
                 }
 
                 if (remoteHendlerRMI.getRegistry() != null) {
+//                remoteHendlerRMI.registClient();
                     remoteHendlerRMI.commandExecute(jTextField2.getText());
                     jTextArea1.append(simpleDateFormat.format(new Date()) + jTextField2.getText() + "\n");
+//                remoteHendlerRMI.close();
 //                    remoteHendlerRMI.registClient();
                 }
 //                if (connectionHendler.getSocket() == null) {
@@ -110,12 +105,19 @@ public class CClientRMI extends javax.swing.JFrame {
         });
     }
 
-    private void  showResponse() {
+    private synchronized void showResponse() {
         showResponseThread = new Thread(() -> {
-            while (remoteHendlerRMI.getRegistry() != null){
+            while (remoteHendlerRMI.getRegistry() != null) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 if (remoteHendlerRMI.getResponseInfo() != null && !remoteHendlerRMI.getResponseInfo().equals("")) {
+//                    remoteHendlerRMI.registClient();
                     jTextArea1.append(simpleDateFormat.format(new Date()) + remoteHendlerRMI.getResponseInfo() + "\n");
                     remoteHendlerRMI.setResponseInfo(null);
+//                    remoteHendlerRMI.close();
                 }
             }
         });
