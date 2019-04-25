@@ -1,4 +1,4 @@
-# CClient
+# CClient TCP Sockets
 
 CClient is a chat client with simple UI, that can send and receive messages of a certain type (texts or files) from the server.
 
