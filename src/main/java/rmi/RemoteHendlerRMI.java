@@ -17,7 +17,6 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -32,7 +31,9 @@ public class RemoteHendlerRMI implements Closeable {
     private String hostname;
     private ProtocolManager protocolManager = new ProtocolManager();
     private String sessionId;
+    private String[] listUsers;
     private volatile String responseInfo;
+    private boolean isRegex;
 
     private TimerTask timerTaskReciveChecker;
     private Timer timerReciveChecker;
@@ -55,23 +56,19 @@ public class RemoteHendlerRMI implements Closeable {
     public void close() {
         if (this.registry != null) {
             try {
-                this.registry = null;
-                this.registry.unbind(IServer.RMI_SERVER_NAME);
-                this.proxy = null;
-            } catch (NotBoundException e) {
-                e.printStackTrace();
+                timerTaskReciveChecker.cancel();
+                timerReciveChecker.cancel();
+                if (sessionId != null) {
+                    proxy.exit(sessionId);
+                    sessionId = null;
+                    listUsers = null;
+                }
             } catch (AccessException e) {
                 e.printStackTrace();
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
-            this.registry = null;
         }
-//        if (this.proxy != null) {
-//            UnicastRemoteObject.unexportObject(IServer.class, true);
-//            this.proxy = null;
-//        }
-
     }
 
     public void commandExecute(String textFromLabel) {
@@ -87,60 +84,89 @@ public class RemoteHendlerRMI implements Closeable {
                     switch (command) {
                         case CMD_PING:
                             proxy.ping();
+                            isRegex = true;
                             break;
                         case CMD_ECHO:
                             responseInfo = new String(proxy.echo(new String(protocolManager.parserCommandToGetSinglePostArgument(textFromLable))));
+                            isRegex = true;
                             break;
                         case CMD_LOGIN:
-                            String[] itemForLogin = protocolManager.parserCommandToGetPluralPostArgument(textFromLable);
-                            sessionId = proxy.login(itemForLogin[1], itemForLogin[2]);
-                            if (sessionId != null) {
-                                responseInfo = new String("Login OK!" + "Session ID: " + sessionId);
+                            if (sessionId == null) {
+                                String[] itemForLogin = protocolManager.parserCommandToGetPluralPostArgument(textFromLable);
+                                sessionId = proxy.login(itemForLogin[1], itemForLogin[2]);
+                                responseInfo = new String("Login OK! " + "Session ID: " + sessionId);
+                                resiveInfoChecker();
                             } else {
-                                responseInfo = new String("Some trouble with login!");
+                                responseInfo = new String("You have alrady had login!");
                             }
+                            isRegex = true;
                             break;
                         case CMD_LIST:
-                            String[] strings = proxy.listUsers(sessionId);
-                            StringBuffer stringBuffer = new StringBuffer();
-                            for (String string : strings) {
-                                stringBuffer.append(string + "");
+                            if (sessionId != null) {
+                                responseInfo = new String("List LogUsers - " + parsToString(proxy.listUsers(sessionId)));
+                            } else {
+                                responseInfo = new String("First you mast login!");
                             }
-                            responseInfo = new String("LoginUsers - " + stringBuffer);
+                            isRegex = true;
                             break;
                         case CMD_MSG:
-                            String[] itemForMsg = protocolManager.parserCommandToGetPluralPostArgument(textFromLable);
-                            proxy.sendMessage(sessionId, new IServer.Message(itemForMsg[1], itemForMsg[2]));
-                            responseInfo = new String("Message send!");
+                            if (sessionId != null) {
+                                String[] itemForMsg = protocolManager.parserCommandToGetPluralPostArgument(textFromLable);
+                                proxy.sendMessage(sessionId, new IServer.Message(itemForMsg[1], itemForMsg[2]));
+                                responseInfo = new String("Message send!");
+                            } else {
+                                responseInfo = new String("First you mast login!");
+                            }
+                            isRegex = true;
                             break;
                         case CMD_FILE:
-                            String[] itemForFile = protocolManager.parserCommandToGetPluralPostArgument(textFromLable);
-                            Path pathToFile = Paths.get(itemForFile[2]);
-                            File fileToSend = new File(pathToFile.toString());
-                            proxy.sendFile(sessionId, new IServer.FileInfo(itemForFile[1].toString(), fileToSend));
-                            responseInfo = new String("File send!");
+                            if (sessionId != null) {
+                                String[] itemForFile = protocolManager.parserCommandToGetPluralPostArgument(textFromLable);
+                                Path pathToFile = Paths.get(itemForFile[2]);
+                                File fileToSend = new File(pathToFile.toString());
+                                proxy.sendFile(sessionId, new IServer.FileInfo(itemForFile[1].toString(), fileToSend));
+                                responseInfo = new String("File send!");
+                            } else {
+                                responseInfo = new String("First you mast login!");
+                            }
+                            isRegex = true;
                             break;
                     }
                 } catch (RemoteException e) {
-//                    e.printStackTrace();
+                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
+        if (!isRegex) {
+            responseInfo = new String("Wrong input command!");
+        }
     }
 
-    public synchronized void resiveInfoChecker() {
+    private synchronized void resiveInfoChecker() {
+
         timerTaskReciveChecker = new TimerTask() {
             @Override
             public void run() {
                 try {
                     if (sessionId != null && registry != null) {
+
+                        if (listUsers == null) {
+                            listUsers = proxy.listUsers(sessionId);
+                            responseInfo = new String("List LogUsers - " + parsToString(listUsers));
+                        } else {
+                            String[] newListUser = proxy.listUsers(sessionId);
+                            if (!isSameMas(listUsers, newListUser)) {
+                                responseInfo = new String("New list LogUsers - " + parsToString(newListUser));
+                                listUsers = newListUser;
+                            }
+                        }
+
                         IServer.Message message = proxy.receiveMessage(sessionId);
                         if (message != null) {
                             responseInfo = new String("new msg: " + message.getReceiver() + "- " + message.getMessage());
                         }
-//                        Thread.sleep(100);
 
                         IServer.FileInfo fileInfo = proxy.receiveFile(sessionId);
                         if (fileInfo != null) {
@@ -163,9 +189,8 @@ public class RemoteHendlerRMI implements Closeable {
                                 e.printStackTrace();
                             }
                         }
-//                        Thread.sleep(100);
                     }
-                } catch (RemoteException  e) {
+                } catch (RemoteException e) {
                     e.printStackTrace();
                     cancel();
                 }
@@ -175,4 +200,24 @@ public class RemoteHendlerRMI implements Closeable {
         timerReciveChecker.scheduleAtFixedRate(timerTaskReciveChecker, 500, 500);
     }
 
+    private String parsToString(String[] strMas) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (String string : strMas) {
+            stringBuffer.append(string + "");
+        }
+        return stringBuffer.toString();
+    }
+
+    private boolean isSameMas(String[] prevMas, String[] newMas) {
+        if (prevMas.length != newMas.length) {
+            return false;
+        } else {
+            for (int i = 0; i < prevMas.length; i++) {
+                if (!prevMas[i].equals(newMas[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 }

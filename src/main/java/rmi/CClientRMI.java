@@ -17,7 +17,6 @@ public class CClientRMI extends javax.swing.JFrame {
     private int port = DEFAULT_PORT;
     private Date date;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss:  ");
-    //    private ConnectionHendler connectionHendler;
     private Thread showResponseThread;
 
     private RemoteHendlerRMI remoteHendlerRMI;
@@ -39,14 +38,12 @@ public class CClientRMI extends javax.swing.JFrame {
                 if (remoteHendlerRMI.getRegistry() == null) {
                     remoteHendlerRMI.registClient();
                     if (remoteHendlerRMI.getRegistry() != null) {
-//                        connectionHendler.readMessage();
-//                        connectionHendler.sendRequestInfo();
-                        remoteHendlerRMI.resiveInfoChecker();
                         showResponse();
                         jTextArea1.append(simpleDateFormat.format(new Date()) + "Connected to server!\n");
+                        jButton1.setEnabled(false);
                     }
-//                    remoteHendlerRMI.close();
                 } else {
+                    jButton1.setEnabled(true);
                     jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t connect to server!\n");
                     remoteHendlerRMI.close();
                     return;
@@ -58,22 +55,12 @@ public class CClientRMI extends javax.swing.JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (remoteHendlerRMI.getRegistry() != null) {
+                if (remoteHendlerRMI.getRegistry() != null && remoteHendlerRMI.getSessionId() != null) {
                     remoteHendlerRMI.close();
-//                    showResponseThread.interrupt();
-                    if (remoteHendlerRMI.getRegistry() == null) {
-                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
-                    } else {
-                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t disconnect, try again!\n");
-                    }
+                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
+                } else {
+                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Can't disconnect, no loginUser!\n");
                 }
-//                if (connectionHendler.getSocket() != null) {
-//                    connectionHendler.close(true);
-//                        showResponseThread.interrupt();
-//                    if (connectionHendler.getSocket() == null) {
-//                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
-//                    }
-//                }
             }
         });
 
@@ -87,20 +74,9 @@ public class CClientRMI extends javax.swing.JFrame {
                 }
 
                 if (remoteHendlerRMI.getRegistry() != null) {
-//                remoteHendlerRMI.registClient();
                     remoteHendlerRMI.commandExecute(jTextField2.getText());
                     jTextArea1.append(simpleDateFormat.format(new Date()) + jTextField2.getText() + "\n");
-//                remoteHendlerRMI.close();
-//                    remoteHendlerRMI.registClient();
                 }
-//                if (connectionHendler.getSocket() == null) {
-//                    jTextArea1.append(simpleDateFormat.format(new Date()) + "No connection with server" + "\n");
-//                    return;
-//                }
-//                if (connectionHendler.getSocket().isConnected()) {
-//                    connectionHendler.sendMessage(jTextField2.getText());
-//                    jTextArea1.append(simpleDateFormat.format(new Date()) + jTextField2.getText() + "\n");
-//                }
             }
         });
     }
@@ -114,10 +90,8 @@ public class CClientRMI extends javax.swing.JFrame {
                     e.printStackTrace();
                 }
                 if (remoteHendlerRMI.getResponseInfo() != null && !remoteHendlerRMI.getResponseInfo().equals("")) {
-//                    remoteHendlerRMI.registClient();
                     jTextArea1.append(simpleDateFormat.format(new Date()) + remoteHendlerRMI.getResponseInfo() + "\n");
                     remoteHendlerRMI.setResponseInfo(null);
-//                    remoteHendlerRMI.close();
                 }
             }
         });
