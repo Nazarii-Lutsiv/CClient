@@ -59,7 +59,7 @@ public class CClientRMI extends javax.swing.JFrame {
                     remoteHendlerRMI.close();
                     jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
                 } else {
-                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Can't disconnect, no loginUser!\n");
+                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Can't exit, no loginUser!\n");
                 }
             }
         });
@@ -128,7 +128,7 @@ public class CClientRMI extends javax.swing.JFrame {
 
         jButton1.setText("Connect");
 
-        jButton2.setText("Disconnect");
+        jButton2.setText("Exit");
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);

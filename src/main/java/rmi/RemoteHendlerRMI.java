@@ -33,7 +33,7 @@ public class RemoteHendlerRMI implements Closeable {
     private String sessionId;
     private String[] listUsers;
     private volatile String responseInfo;
-    private boolean isRegex;
+    private boolean isRegex = false;
 
     private TimerTask timerTaskReciveChecker;
     private Timer timerReciveChecker;
@@ -131,6 +131,15 @@ public class RemoteHendlerRMI implements Closeable {
                             }
                             isRegex = true;
                             break;
+                        case CMD_EXIT:
+                            if (sessionId != null) {
+                                close();
+                                responseInfo = new String("Disconnected!");
+                            } else {
+                                responseInfo = new String("Can't exit, no loginUser!");
+                            }
+                            isRegex = true;
+                            break;
                     }
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -142,6 +151,7 @@ public class RemoteHendlerRMI implements Closeable {
         if (!isRegex) {
             responseInfo = new String("Wrong input command!");
         }
+        isRegex = false;
     }
 
     private synchronized void resiveInfoChecker() {
@@ -197,7 +207,7 @@ public class RemoteHendlerRMI implements Closeable {
             }
         };
         timerReciveChecker = new Timer("TimerReciveChecker");
-        timerReciveChecker.scheduleAtFixedRate(timerTaskReciveChecker, 500, 500);
+        timerReciveChecker.scheduleAtFixedRate(timerTaskReciveChecker, 200, 200);
     }
 
     private String parsToString(String[] strMas) {

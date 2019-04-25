@@ -1,6 +1,7 @@
-# CClient
+# CClient RMI
 
-CClient is a chat client with simple UI, that can send and receive messages of a certain type (texts or files) from the server.
+CClient is a chat client with simple UI, that can send and receive messages of a certain type (texts or files) from the server. 
+In this case for sending and receiving message used RMI - method of communication for building distributed systems.
 
 ## Running the program
 
@@ -21,8 +22,9 @@ CClient is a chat client with simple UI, that can send and receive messages of a
 Command Name |Structure of the command|Example|
 -------------|------------------------|-------|
 Ping|#ping: <br> #p|#p|
-Echo|#e: ; <br> #echo: ; <br> #e: (some text); <br> #echo: (some text);|#e: hello;|
+Echo|#ec: ; <br> #echo: ; <br> #ec: (some text); <br> #echo: (some text);|#ec: hello;|
 Login|#login: login-nazar password-rie123; <br> #login: l-nazar p-rie123;| #login: l-nazar p-rie123;|
 Login List|#list|#list|
 Send Msg|#msg: login-(login user) text-(some text); <br> #msg: l-(login user) t-(some text);|#msg: l-nazar t-hello;|
 Send File|#file: login-(login user) file-(URL dir with name file); <br> #f: l-(login user) f-(URL dir with name file);| #f: l-nazar f-F:\TestCClient\test1.txt;|
+Exit|#ex: <br> #exit|#exit|
