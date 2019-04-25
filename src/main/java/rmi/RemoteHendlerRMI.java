@@ -43,12 +43,18 @@ public class RemoteHendlerRMI implements Closeable {
         this.hostname = hostname;
     }
 
-    public void registClient() {
+    public boolean registClient() {
         try {
             this.registry = LocateRegistry.getRegistry(hostname, port);
             this.proxy = (IServer) registry.lookup(IServer.RMI_SERVER_NAME);
+            return true;
         } catch (NotBoundException | RemoteException e) {
             e.printStackTrace();
+            this.registry = null;
+            this.proxy = null;
+            sessionId = null;
+            listUsers = null;
+            return false;
         }
     }
 
@@ -202,6 +208,8 @@ public class RemoteHendlerRMI implements Closeable {
                     }
                 } catch (RemoteException e) {
                     e.printStackTrace();
+                    registry = null;
+                    proxy = null;
                     cancel();
                 }
             }

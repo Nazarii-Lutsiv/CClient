@@ -36,16 +36,14 @@ public class CClientRMI extends javax.swing.JFrame {
                 remoteHendlerRMI.setPort(Integer.parseInt(jTextField3.getText()));
 
                 if (remoteHendlerRMI.getRegistry() == null) {
-                    remoteHendlerRMI.registClient();
-                    if (remoteHendlerRMI.getRegistry() != null) {
+                    if (remoteHendlerRMI.registClient()) {
                         showResponse();
                         jTextArea1.append(simpleDateFormat.format(new Date()) + "Connected to server!\n");
-                        jButton1.setEnabled(false);
+                    } else {
+                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Can't connect to server!\n");
                     }
                 } else {
-                    jButton1.setEnabled(true);
-                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t connect to server!\n");
-                    remoteHendlerRMI.close();
+                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t connect to server, connection have already done!\n");
                     return;
                 }
             }
