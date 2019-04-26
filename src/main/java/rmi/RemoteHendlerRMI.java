@@ -181,7 +181,7 @@ public class RemoteHendlerRMI implements Closeable {
 
                         IServer.Message message = proxy.receiveMessage(sessionId);
                         if (message != null) {
-                            responseInfo = new String("new msg: " + message.getReceiver() + "- " + message.getMessage());
+                            responseInfo = new String("new msg: " + message.getSender() + "- " + message.getMessage());
                         }
 
                         IServer.FileInfo fileInfo = proxy.receiveFile(sessionId);
@@ -197,9 +197,9 @@ public class RemoteHendlerRMI implements Closeable {
                                     file.delete();
                                     file.createNewFile();
                                     Files.write(path, fileInfo.getFileContent(), StandardOpenOption.APPEND);
-                                    responseInfo = new String("File - " + fileInfo.getFilename() + " is exist and rewrite.");
+                                    responseInfo = new String("File - " + fileInfo.getFilename() + " came from " + fileInfo.getSender() + " is exist and rewrite.");
                                 } else {
-                                    responseInfo = new String("File - " + fileInfo.getFilename() + " can't create!");
+                                    responseInfo = new String("File - " + fileInfo.getFilename() + " came from " + fileInfo.getSender() + " can't create!");
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
