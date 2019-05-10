@@ -9,7 +9,7 @@ In this case for sending and receiving message used SOAP.
 
 * Open this application in any IDE with Java language support.
 
-* Run the main method that is in the CClient.java class.
+* Run the main method that is in the CClientSOAP.java class.
 
 ## Usage
 
