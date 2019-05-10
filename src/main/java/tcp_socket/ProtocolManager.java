@@ -248,6 +248,7 @@ public class ProtocolManager {
     public String[] parserCommandToGetPluralPostArgument(String command) {
         String arguments = parserCommandToGetSinglePostArgument(command);
         String[] strings = arguments.split("(\\w)-");
+        strings[1] = strings[1].substring(0, strings[1].length()-1);
         return strings;
     }
 
