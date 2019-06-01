@@ -6,9 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CClientRest extends javax.swing.JFrame {
-    private static final String DEFAULT_URL = "http://localhost:4321/chat?wsdl";
 
-    private String url = DEFAULT_URL;
     private Date date;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss:  ");
     private Thread showResponseThread;
