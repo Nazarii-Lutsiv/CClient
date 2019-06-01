@@ -1,7 +1,7 @@
-# CClient SOAP
+# CClient REST
 
 CClient is a chat client with simple UI, that can send and receive messages of a certain type (texts or files) from the server. 
-In this case for sending and receiving message used SOAP.
+In this case for sending and receiving message used REST.
 
 ## Running the program
 
@@ -9,7 +9,7 @@ In this case for sending and receiving message used SOAP.
 
 * Open this application in any IDE with Java language support.
 
-* Run the main method that is in the CClientSOAP.java class.
+* Run the main method that is in the CClientREST.java class.
 
 ## Usage
 
@@ -27,4 +27,4 @@ Login|#login: login-nazar password-rie123; <br> #login: l-nazar p-rie123;| #logi
 Login List|#list|#list|
 Send Msg|#msg: login-(login user) text-(some text); <br> #msg: l-(login user) t-(some text);|#msg: l-nazar t-hello;|
 Send File|#file: login-(login user) file-(URL dir with name file); <br> #f: l-(login user) f-(URL dir with name file);| #f: l-nazar f-F:\TestCClient\test1.txt;|
-Exit|#ex: <br> #exit|#exit|
+

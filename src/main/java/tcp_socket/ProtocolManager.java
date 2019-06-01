@@ -240,7 +240,7 @@ public class ProtocolManager {
 
     public String parserCommandToGetSinglePostArgument(String command) {
         if (isCommand) {
-            String arg = command.substring(command.indexOf(":") + 1, command.indexOf(";"));
+            String arg = command.substring(command.indexOf(":") + 2, command.indexOf(";"));
             return arg;
         } else return command;
     }
