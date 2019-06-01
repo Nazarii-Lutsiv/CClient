@@ -48,23 +48,17 @@ public class CClientRest extends javax.swing.JFrame {
                 }
             }
         });
-
     }
 
     private void sendToServer() {
-//        if (reqRespHendlerREST.getServerWrapper() == null) {
-//            jTextArea1.append(simpleDateFormat.format(new Date()) + "No connection with server" + "\n");
-//            return;
-//        } else if (reqRespHendlerREST.getServerWrapper() != null) {
         reqRespHendlerREST.commandExecute(jTextField2.getText());
         jTextArea1.append(simpleDateFormat.format(new Date()) + jTextField2.getText() + "\n");
         jTextField1.setText(reqRespHendlerREST.getCurrentURLReq());
-//        }
     }
 
     private synchronized void showResponse() {
         showResponseThread = new Thread(() -> {
-            while (true) {//TODO
+            while (true) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
@@ -72,7 +66,6 @@ public class CClientRest extends javax.swing.JFrame {
                 }
                 if (reqRespHendlerREST.getResponseInfo() != null && !reqRespHendlerREST.getResponseInfo().equals("")) {
                     jTextArea1.append(simpleDateFormat.format(new Date()) + reqRespHendlerREST.getResponseInfo() + "\n");
-//                    jTextField1.setText(reqRespHendlerREST.getCurrentURLReq());
                     reqRespHendlerREST.setResponseInfo(null);
                 }
             }
