@@ -1,7 +1,7 @@
-# CClient REST
+# CClient MQ
 
 CClient is a chat client with simple UI, that can send and receive messages of a certain type (texts or files) from the server. 
-In this case for sending and receiving message used REST.
+In this case for sending and receiving message used Message Queue API.
 
 ## Running the program
 
@@ -9,7 +9,7 @@ In this case for sending and receiving message used REST.
 
 * Open this application in any IDE with Java language support.
 
-* Run the main method that is in the CClientREST.java class.
+* Run the main method that is in the CClientMQ.java class.
 
 ## Usage
 
