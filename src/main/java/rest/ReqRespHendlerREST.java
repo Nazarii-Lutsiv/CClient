@@ -211,7 +211,6 @@ public class ReqRespHendlerREST implements Closeable {
                                 wrappedList.items = newWrappedList.items;
                             }
                         }
-
                         WrappedList wrappedListMsg = client.target(URL_RECEIVE_MSG).request(MediaType.APPLICATION_JSON_TYPE).get(WrappedList.class);
                         if (wrappedListMsg.items != null) {
                             Message message = client.target(URL_RECEIVE_MSG + "/" + wrappedListMsg.items.get(0)).request(MediaType.APPLICATION_JSON_TYPE).get(Message.class);
@@ -219,7 +218,6 @@ public class ReqRespHendlerREST implements Closeable {
                             Response deleteMsg = client.target(URL_RECEIVE_MSG + "/" + wrappedListMsg.items.get(0)).request(MediaType.APPLICATION_JSON_TYPE).delete();
                             System.out.println(deleteMsg.getStatus() + " - from delete msg.");
                         }
-
                     }
                 } catch (ProcessingException e) {
                     responseInfo = new String("Connection with server lost!");

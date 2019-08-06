@@ -1,28 +1,58 @@
 package mq;
 
 
-import rest.ReqRespHendlerREST;
+import soap.CommandHendlerSOAP;
 
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CClientMQ extends javax.swing.JFrame {
+    private static final String DEFAULT_URL = "tcp://localhost:61616";
 
+//    private String url = DEFAULT_URL;
     private Date date;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss:  ");
     private Thread showResponseThread;
 
-    private ReqRespHendlerREST reqRespHendlerREST;
+    private ReqRespHendlerMQ reqRespHendlerMQ;
 
     public CClientMQ() {
         super("CClient");
         initComponents();
         setResizable(false);
-        jTextField1.setEnabled(false);
+        jButton1.setEnabled(true);
+        jButton2.setEnabled(false);
 
-        this.reqRespHendlerREST = new ReqRespHendlerREST();
-        showResponse();
+        jButton1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // connect to server
+                reqRespHendlerMQ = new ReqRespHendlerMQ(jTextField1.getText());
+
+//                if (commandHendlerSOAP.getServerWrapper() == null) {
+                    if (reqRespHendlerMQ.connectionInit()) {
+                        jTextField1.setEnabled(false);
+                        showResponse();
+                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Connected to server!\n");
+                        jButton1.setEnabled(false);
+                        jButton2.setEnabled(true);
+                    } else {
+                        jTextArea1.append(simpleDateFormat.format(new Date()) + "Can't connect to server!\n");
+                    }
+//                } else {
+//                    jTextArea1.append(simpleDateFormat.format(new Date()) + "Can`t connect to server, connection have already done!\n");
+//                    return;
+//                }
+            }
+        });
+
+        jButton2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                close();
+            }
+        });
 
         jButton3.addActionListener(new ActionListener() {
             @Override
@@ -35,7 +65,7 @@ public class CClientMQ extends javax.swing.JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                reqRespHendlerREST.close();
+                reqRespHendlerMQ.close();
                 e.getWindow().dispose();
             }
         });
@@ -48,27 +78,50 @@ public class CClientMQ extends javax.swing.JFrame {
                 }
             }
         });
+
     }
 
-    private void sendToServer() {
-        reqRespHendlerREST.commandExecute(jTextField2.getText());
-        jTextArea1.append(simpleDateFormat.format(new Date()) + jTextField2.getText() + "\n");
-        jTextField1.setText(reqRespHendlerREST.getCurrentURLReq());
+    private void close () {
+        if (reqRespHendlerMQ.isConnected()) {
+            reqRespHendlerMQ.close();
+            jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
+            jTextField1.setEnabled(true);
+            jButton1.setEnabled(true);
+            jButton2.setEnabled(false);
+        } else if (!reqRespHendlerMQ.isConnected()) {
+//            jTextArea1.append(simpleDateFormat.format(new Date()) + "Disconnected!\n");
+            jTextField1.setEnabled(true);
+            jButton1.setEnabled(true);
+            jButton2.setEnabled(false);
+        } else {
+            jTextArea1.append(simpleDateFormat.format(new Date()) + "Can't exit!\n");
+        }
+    }
+
+    private void sendToServer () {
+        if (!reqRespHendlerMQ.isConnected()) {
+            jTextArea1.append(simpleDateFormat.format(new Date()) + "No connection with server" + "\n");
+            return;
+        } else if (reqRespHendlerMQ.isConnected()) {
+            reqRespHendlerMQ.commandExecute(jTextField2.getText());
+            jTextArea1.append(simpleDateFormat.format(new Date()) + jTextField2.getText() + "\n");
+        }
     }
 
     private synchronized void showResponse() {
         showResponseThread = new Thread(() -> {
-            while (true) {
+            while (reqRespHendlerMQ.isConnected()) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (reqRespHendlerREST.getResponseInfo() != null && !reqRespHendlerREST.getResponseInfo().equals("")) {
-                    jTextArea1.append(simpleDateFormat.format(new Date()) + reqRespHendlerREST.getResponseInfo() + "\n");
-                    reqRespHendlerREST.setResponseInfo(null);
+                if (reqRespHendlerMQ.getResponseInfo() != null && !reqRespHendlerMQ.getResponseInfo().equals("")) {
+                    jTextArea1.append(simpleDateFormat.format(new Date()) + reqRespHendlerMQ.getResponseInfo() + "\n");
+                    reqRespHendlerMQ.setResponseInfo(null);
                 }
             }
+            close();
         });
         showResponseThread.start();
     }
@@ -80,6 +133,10 @@ public class CClientMQ extends javax.swing.JFrame {
         jTextField1 = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
 
+
+
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         jTextField2 = new javax.swing.JTextField();
@@ -89,9 +146,13 @@ public class CClientMQ extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jTextField1.setText("http://localhost:8080/chat/server/");
+        jTextField1.setText(DEFAULT_URL);
 
         jLabel1.setText("URL");
+
+        jButton1.setText("Connect");
+
+        jButton2.setText("Exit");
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -116,10 +177,12 @@ public class CClientMQ extends javax.swing.JFrame {
                                         .addGroup(layout.createSequentialGroup()
                                                 .addComponent(jLabel1)
                                                 .addGap(28, 28, 28)
-                                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 316, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addGap(18, 18, 18)))
+                                                .addComponent(jButton1)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(jButton2)))
                                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -128,7 +191,9 @@ public class CClientMQ extends javax.swing.JFrame {
                                 .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(jLabel1)
-                                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButton1)
+                                        .addComponent(jButton2))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 311, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -174,6 +239,9 @@ public class CClientMQ extends javax.swing.JFrame {
         });
     }
 
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
